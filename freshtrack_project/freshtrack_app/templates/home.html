@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - FreshTrack{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>🥬 Welcome to FreshTrack</h1>
+    <p>Never let products expire unnoticed again</p>
+    <div class="hero-buttons">
+        {% if not user.is_authenticated %}
+        <a href="{% url 'register' %}" class="btn">Get Started</a>
+        <a href="{% url 'login' %}" class="btn">Login</a>
+        {% else %}
+        {% if user.role.role == 'buyer' %}
+        <a href="{% url 'buyer_dashboard' %}" class="btn">Browse Products</a>
+        {% elif user.role.role == 'seller' %}
+        <a href="{% url 'seller_dashboard' %}" class="btn">My Products</a>
+        <a href="{% url 'add_product' %}" class="btn">Add New Product</a>
+        {% elif user.role.role == 'admin' or user.is_staff %}
+        <a href="{% url 'admin_dashboard' %}" class="btn">Admin Dashboard</a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if is_admin %}
+<!-- Admin Moderation Section -->
+<style>
+    .admin-section {
+        margin: 40px 0;
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .admin-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .admin-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 10px;
+    }
+    
+    .admin-subtitle {
+        color: #6b7280;
+        font-size: 1.1rem;
+    }
+    
+    .stats-row {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-badge {
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .stat-badge.pending { background: #fef3c7; color: #92400e; }
+    .stat-badge.approved { background: #d1fae5; color: #065f46; }
+    .stat-badge.rejected { background: #fee2e2; color: #991b1b; }
+    .stat-badge.expired { background: #f3f4f6; color: #4b5563; }
+    
+    .moderation-table {
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .moderation-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .moderation-table thead {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .moderation-table th {
+        padding: 16px 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .moderation-table tbody tr {
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.2s;
+    }
+    
+    .moderation-table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .moderation-table td {
+        padding: 16px 12px;
+        font-size: 14px;
+        color: #374151;
+    }
+    
+    .product-name-cell {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .seller-cell {
+        color: #6b7280;
+    }
+    
+    .price-cell {
+        font-weight: 600;
+        color: #059669;
+    }
+    
+    .date-cell {
+        font-size: 13px;
+        color: #6b7280;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .action-btns {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-approve {
+        background: #10b981;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    
+    .btn-approve:hover {
+        background: #059669;
+    }
+    
+    .btn-reject {
+        background: #ef4444;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    
+    .btn-reject:hover {
+        background: #dc2626;
+    }
+    
+    .no-products {
+        text-align: center;
+        padding: 40px;
+        color: #9ca3af;
+    }
+</style>
+
+<div class="admin-section">
+    <div class="admin-header">
+        <h2 class="admin-title">⚙️ Product Moderation Center</h2>
+        <p class="admin-subtitle">Review and approve seller products</p>
+    </div>
+    
+    <div class="stats-row">
+        <div class="stat-badge pending">
+            ⏳ Pending: {{ pending_count }}
+        </div>
+        <div class="stat-badge approved">
+            ✅ Approved: {{ approved_count }}
+        </div>
+        <div class="stat-badge rejected">
+            ❌ Rejected: {{ rejected_count }}
+        </div>
+        <div class="stat-badge expired">
+            ⌛ Expired: {{ expired_count }}
+        </div>
+    </div>
+    
+    <div class="moderation-table">
+        {% if all_products %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Seller / Company</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Manufacturing Date</th>
+                    <th>Expiry DateTime</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in all_products %}
+                <tr>
+                    <td class="product-name-cell">{{ product.name }}</td>
+                    <td class="seller-cell">{{ product.seller.company_name }}</td>
+                    <td class="price-cell">৳{{ product.price|floatformat:2 }}</td>
+                    <td>{{ product.quantity }} units</td>
+                    <td class="date-cell">
+                        {{ product.manufacturing_date|date:"M d, Y" }}<br>
+                        {{ product.manufacturing_date|date:"H:i" }}
+                    </td>
+                    <td class="date-cell">
+                        {{ product.expiry_datetime|date:"M d, Y" }}<br>
+                        {{ product.expiry_datetime|date:"H:i" }}
+                    </td>
+                    <td>
+                        <span class="status-badge {{ product.status }}">
+                            {% if product.status == 'pending' %}
+                            ⏳ Pending
+                            {% elif product.status == 'approved' %}
+                            ✅ Approved
+                            {% elif product.status == 'rejected' %}
+                            ❌ Rejected
+                            {% elif product.status == 'expired' %}
+                            ⌛ Expired
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="{% url 'approve_product' product.id %}" class="btn-approve">✅ Approve</a>
+                            <a href="{% url 'reject_product' product.id %}" class="btn-reject">❌ Reject</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-products">
+            <p>📦 No products to moderate yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<!-- Regular Featured Products Section for Non-Admins -->
+<div style="margin: 40px 0;">
+    <h2 style="
+        text-align: center; 
+        margin-bottom: 40px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #93c5fd 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+        position: relative;
+        padding-bottom: 15px;
+        display: inline-block;
+        width: 100%;
+    ">
+        <span style="
+            display: inline-block;
+            background: white;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.5));
+        ">
+            🌿 Featured Fresh Products 🍃
+        </span>
+    </h2>
+    <div style="
+        width: 120px;
+        height: 4px;
+        background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent);
+        margin: -25px auto 35px;
+        border-radius: 2px;
+        box-shadow: 0 2px 10px rgba(59, 130, 246, 0.6);
+    "></div>
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <div class="product-header">
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-price">৳{{ product.price }}</div>
+            </div>
+            <div class="product-info">
+                <div class="info-row">
+                    <span class="label">Seller:</span>
+                    <span class="value">{{ product.seller.company_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Rating:</span>
+                    <span class="value" style="color: #FFD700;">
+                        {% with avg=product.get_average_rating %}
+                            {% if avg > 0 %}
+                                ★ {{ avg }}/5 ({{ product.get_rating_count }})
+                            {% else %}
+                                <span style="color: #999;">No reviews yet</span>
+                            {% endif %}
+                        {% endwith %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Stock:</span>
+                    <span class="value">{{ product.quantity }} units</span>
+                </div>
+                <div class="hours-left">⏱️ <span
+                        data-expiry="{{ product.expiry_datetime.timestamp|floatformat:0 }}000">{{
+                        product.countdown_timer }}</span></div>
+                <span class="alert-badge alert-{{ product.alert_level }}">
+                    {% if product.alert_level == 'expired' %}
+                    Expired
+                    {% elif product.alert_level == 'last_chance' %}
+                    Last Chance
+                    {% elif product.alert_level == 'urgent' %}
+                    Urgent Alert
+                    {% elif product.alert_level == 'soon' %}
+                    Expiring Soon
+                    {% elif product.alert_level == 'warning' %}
+                    Early Warning
+                    {% else %}
+                    Fresh
+                    {% endif %}
+                </span>
+            </div>
+            {% if user.is_authenticated and user.role.role == 'buyer' %}
+            <div class="product-footer">
+                <a href="{% url 'product_detail' product.id %}" class="btn btn-success">View Details</a>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; color: white;">
+            <p>No approved products yet. Check back soon!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div style="margin-top: 50px;">
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>⏰ Hour-Based Tracking</h3>
+            <p>See exactly how many hours remain before expiry</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔔 Smart Alerts</h3>
+            <p>Get notified at the right time for hot deals</p>
+        </div>
+        <div class="feature-card">
+            <h3>💰 Save Money</h3>
+            <p>Find discounted items nearing expiry</p>
+        </div>
+        <div class="feature-card">
+            <h3>♻️ Reduce Waste</h3>
+            <p>Help prevent food and product waste</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% load static %}
+{% load product_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Dashboard - FreshTrack</title>
+    <link rel="stylesheet" href="{% static 'css/freshtrack-eco.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% url 'home' %}" class="logo">FreshTrack</a>
+            
+            <ul class="nav-links">
+                <li><a href="{% url 'buyer_dashboard' %}">🛒 Products</a></li>
+                <li><a href="{% url 'buyer_history' %}">📋 My Orders</a></li>
+                <li><a href="#">👤 {{ user.username }}</a></li>
+                <li><a href="{% url 'logout' %}">🚪 Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Header -->
+        <h1>Browse Fresh Products</h1>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-card-icon">🛒</div>
+                <div class="summary-card-value">{{ products|length }}</div>
+                <div class="summary-card-label">Available Products</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-card-icon">⚠️</div>
+                <div class="summary-card-value">
+                    {{ products|length }}  <!-- You can calculate expiring_soon in view -->
+                </div>
+                <div class="summary-card-label">Expiring Soon</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-card-icon">🌿</div>
+                <div class="summary-card-value">
+                    {{ products|length }}  <!-- You can calculate fresh_count in view -->
+                </div>
+                <div class="summary-card-label">Fresh Items</div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-card-icon">🏪</div>
+                <div class="summary-card-value">{{ total_sellers|default:"12" }}</div>
+                <div class="summary-card-label">Active Sellers</div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card">
+            <form method="GET" action="{% url 'buyer_dashboard' %}">
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ search_query }}" 
+                        placeholder="🔍 Search by product name or seller..."
+                        style="flex: 1; padding: 0.75rem 1rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-size: 1rem; transition: all 0.3s ease;"
+                        onfocus="this.style.borderColor='var(--fresh-primary)'"
+                        onblur="this.style.borderColor='var(--gray-200)'"
+                    >
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    {% if search_query %}
+                        <a href="{% url 'buyer_dashboard' %}" class="btn btn-secondary">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Results Info -->
+        {% if search_query %}
+            <div class="alert alert-success">
+                Found {{ products|length }} product(s) for "{{ search_query }}"
+            </div>
+        {% endif %}
+
+        <!-- Product Grid -->
+        {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <!-- Product Image -->
+                    <div class="product-image">
+                        <!-- Default emoji shown from CSS -->
+                        <!-- To use actual images: -->
+                        <!-- {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %} -->
+                    </div>
+                    
+                    <!-- Product Header -->
+                    <div class="product-header">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <div class="product-price">৳{{ product.price|floatformat:2 }}</div>
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <div class="product-info">
+                        <div class="info-row">
+                            <span class="label">🏪 Seller:</span>
+                            <span class="value">{{ product.seller.company_name }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">📦 Stock:</span>
+                            <span class="value">{{ product.quantity }} units</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">📅 Expires:</span>
+                            <span class="value">{{ product.expiry_datetime|date:"M d, Y" }}</span>
+                        </div>
+                        
+                        <!-- Countdown Timer -->
+                        <div class="countdown-timer" id="countdown-{{ product.id }}">
+                            <span class="countdown-text">Calculating...</span>
+                        </div>
+                        
+                        <!-- Urgency Badge -->
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <span class="urgency-badge {{ product.expiry_datetime|urgency_level }}">
+                                {{ product.expiry_datetime|urgency_level|title }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Footer -->
+                    <div class="product-footer">
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-primary btn-block">
+                            🛒 View & Buy
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap;">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-secondary">« First</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-secondary">‹ Previous</a>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="btn btn-primary">{{ num }}</span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-secondary">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-secondary">Next ›</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn btn-secondary">Last »</a>
+                    {% endif %}
+                </div>
+                
+                <p style="text-align: center; margin-top: 1rem; color: var(--gray-600);">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} • 
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} products
+                </p>
+            {% endif %}
+
+        {% else %}
+            <!-- No Products Found -->
+            <div class="card" style="text-align: center; padding: 3rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+                <h2 style="color: var(--gray-600); margin-bottom: 0.5rem;">No Products Found</h2>
+                <p style="color: var(--gray-500);">
+                    {% if search_query %}
+                        No products match your search "{{ search_query }}". Try different keywords.
+                    {% else %}
+                        There are no products available at the moment. Check back soon!
+                    {% endif %}
+                </p>
+                {% if search_query %}
+                    <a href="{% url 'buyer_dashboard' %}" class="btn btn-primary" style="margin-top: 1rem;">Clear Search</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Countdown Timer Script -->
+    <script>
+        function updateCountdowns() {
+            const countdownElements = document.querySelectorAll('[id^="countdown-"]');
+            
+            countdownElements.forEach(el => {
+                const productId = el.id.split('-')[1];
+                // Get expiry from data attribute or calculate from DOM
+                const expiryDate = new Date(el.getAttribute('data-expiry') || '{{ product.expiry_datetime|date:"c" }}');
+                
+                function update() {
+                    const now = new Date();
+                    const diff = expiryDate - now;
+                    
+                    if (diff <= 0) {
+                        el.innerHTML = '<span style="color: var(--status-critical);">❗ Expired</span>';
+                        return;
+                    }
+                    
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    let text = '';
+                    if (days > 0) {
+                        text = `${days}d ${hours}h ${minutes}m`;
+                    } else if (hours > 0) {
+                        text = `${hours}h ${minutes}m`;
+                    } else {
+                        text = `${minutes}m`;
+                    }
+                    
+                    el.innerHTML = `<span class="countdown-text">${text} remaining</span>`;
+                }
+                
+                update();
+                setInterval(update, 60000); // Update every minute
+            });
+        }
+        
+        // Initialize countdowns when page loads
+        document.addEventListener('DOMContentLoaded', updateCountdowns);
+    </script>
+
+    <!-- Add expiry data attributes -->
+    <script>
+        // Add expiry dates to countdown elements
+        {% for product in products %}
+        document.getElementById('countdown-{{ product.id }}').setAttribute('data-expiry', '{{ product.expiry_datetime|date:"c" }}');
+        {% endfor %}
+    </script>
+</body>
+</html>

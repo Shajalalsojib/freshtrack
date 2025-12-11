@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - FreshTrack{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{{ product.name }}</h1>
+
+    <div class="form-row">
+        <div>
+            <div style="margin: 20px 0;">
+                {% if product.has_discount %}
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #f59e0b;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 24px;">🏷️</span>
+                        <span style="font-size: 18px; font-weight: 700; color: #92400e;">{{ product.get_final_discount }}% Discount Applied!</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="text-decoration: line-through; color: #78716c; font-size: 18px;">৳{{ product.price|floatformat:2 }}</div>
+                        <div style="font-size: 28px; color: #dc2626; font-weight: bold;">৳{{ product.get_discounted_price|floatformat:2 }}</div>
+                        <div style="background: #10b981; color: white; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                            Save ৳{{ product.get_savings|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="info-row">
+                    <span class="label">Price:</span>
+                    <span class="value" style="font-size: 24px; color: #27ae60; font-weight: bold;">৳{{ product.price|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="label">Seller:</span>
+                    <span class="value">{{ product.seller.company_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Available Stock:</span>
+                    <span class="value">{{ product.quantity }} units</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Manufacturing Date:</span>
+                    <span class="value">{{ product.manufacturing_date|date:"M d, Y H:i" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Expiry Date:</span>
+                    <span class="value">{{ product.expiry_datetime|date:"M d, Y H:i" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Hours Remaining:</span>
+                    <span class="value hours-left">⏱️ <span
+                            data-expiry="{{ product.expiry_datetime.timestamp|floatformat:0 }}000">{{
+                            product.countdown_timer }}</span></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Status:</span>
+                    <span class="alert-badge alert-{{ product.alert_level }}">
+                        {% if product.alert_level == 'expired' %}
+                        Expired
+                        {% elif product.alert_level == 'last_chance' %}
+                        Last Chance
+                        {% elif product.alert_level == 'urgent' %}
+                        Urgent Alert
+                        {% elif product.alert_level == 'soon' %}
+                        Expiring Soon
+                        {% elif product.alert_level == 'warning' %}
+                        Early Warning
+                        {% else %}
+                        Fresh
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Rating:</span>
+                    <span class="value" style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: #FFD700; font-size: 20px;">
+                            {% with stars=product.get_rating_stars %}
+                                {% for i in "12345"|slice:stars.full %}★{% endfor %}{% if stars.half %}☆{% endif %}{% for i in "12345"|slice:stars.empty %}☆{% endfor %}
+                            {% endwith %}
+                        </span>
+                        <span style="color: #7f8c8d; font-size: 14px;">({{ avg_rating }}/5 from {{ reviews.count }} review{{ reviews.count|pluralize }})</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated and user.role.role == 'buyer' %}
+<div class="card">
+    <h2>🛒 Add to Cart</h2>
+    <form method="POST" action="{% url 'add_to_cart' product.id %}">
+        {% csrf_token %}
+        <div style="max-width: 400px;">
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity" min="1" max="{{ product.quantity }}" value="1"
+                    class="form-control" required>
+                <small style="color: #7f8c8d;">Available: {{ product.quantity }} units</small>
+            </div>
+
+            <div class="form-group">
+                <p><strong>Total Price:</strong> <span id="total-price" style="font-size: 24px; color: #4CAF50;">৳{{ product.get_discounted_price }}</span></p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; display: inline-block; text-align: center; padding: 15px; font-size: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                🛒 Add to Cart
+            </button>
+            
+            <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border-radius: 6px; font-size: 13px; text-align: center;">
+                💡 Add products to cart, then proceed to checkout
+            </div>
+        </div>
+    </form>
+
+    <script>
+        var pricePerUnit = parseFloat('{{ product.get_discounted_price }}');
+        var quantityInput = document.getElementById('quantity');
+        var totalPriceSpan = document.getElementById('total-price');
+
+        function updateTotal() {
+            var qty = parseInt(quantityInput.value) || 1;
+            var total = (pricePerUnit * qty).toFixed(2);
+            totalPriceSpan.textContent = '৳' + total;
+        }
+
+        quantityInput.addEventListener('change', updateTotal);
+        quantityInput.addEventListener('input', updateTotal);
+        
+        // Initialize
+        updateTotal();
+    </script>
+</div>
+{% endif %}
+
+<style>
+.reviews-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    margin-top: 30px;
+}
+
+.reviews-header {
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.reviews-header h2 {
+    color: #2c3e50;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.rating-average {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    border-radius: 12px;
+}
+
+.rating-average-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #FFD700;
+    line-height: 1;
+}
+
+.rating-average-stars {
+    font-size: 24px;
+    color: #FFD700;
+    margin: 10px 0;
+}
+
+.rating-average-text {
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.review-item {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4CAF50;
+}
+
+.review-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.review-author {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.review-stars {
+    color: #FFD700;
+    font-size: 18px;
+}
+
+.review-date {
+    color: #7f8c8d;
+    font-size: 13px;
+}
+
+.review-comment {
+    color: #495057;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.no-reviews {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+}
+
+.no-reviews-icon {
+    font-size: 60px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+</style>
+
+<div class="reviews-section">
+    <div class="reviews-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <h2><span>⭐</span> Customer Reviews & Experiences</h2>
+            
+            {% if user.is_authenticated and user.role.role == 'buyer' %}
+            <a href="{% url 'buyer_history' %}" class="btn" style="background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
+                <span style="font-size: 18px;">✍️</span>
+                <span>Share Your Experience</span>
+            </a>
+            {% endif %}
+        </div>
+        
+        {% if reviews.count > 0 %}
+        <div class="rating-summary" style="margin-top: 20px;">
+            <div class="rating-average">
+                <div class="rating-average-number">{{ avg_rating }}</div>
+                <div class="rating-average-stars">
+                    {% with stars=product.get_rating_stars %}
+                        {% for i in "12345"|slice:stars.full %}★{% endfor %}{% if stars.half %}☆{% endif %}{% for i in "12345"|slice:stars.empty %}☆{% endfor %}
+                    {% endwith %}
+                </div>
+                <div class="rating-average-text">Based on {{ reviews.count }} review{{ reviews.count|pluralize }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; border-left: 4px solid #2196F3;">
+            <p style="margin: 0; color: #1565C0; font-weight: 600;">
+                💬 No reviews yet! Purchase this product and be the first to share your experience.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% for review in reviews %}
+    <div class="review-item">
+        <div class="review-item-header">
+            <div>
+                <div class="review-author">{{ review.buyer.first_name|default:review.buyer.username }}</div>
+                <div class="review-stars">
+                    {% for i in "12345"|slice:review.rating %}★{% endfor %}{% for i in "12345"|slice:"::"|slice:":5"|slice:review.rating %}☆{% endfor %}
+                </div>
+            </div>
+            <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+        </div>
+        {% if review.comment %}
+        <div class="review-comment">{{ review.comment }}</div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="no-reviews">
+        <div class="no-reviews-icon">💬</div>
+        <p style="font-size: 16px; margin: 0;">No reviews yet.</p>
+        <p style="font-size: 14px; margin: 10px 0 0 0;">Purchase this product to be the first to review!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<a href="{% url 'buyer_dashboard' %}" class="btn btn-secondary" style="margin-top: 20px;">Back to Products</a>
+{% endblock %}

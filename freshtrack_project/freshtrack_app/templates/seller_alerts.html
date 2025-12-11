@@ -1,0 +1,439 @@
+{% extends 'base.html' %}
+
+{% block title %}Alerts - FreshTrack{% endblock %}
+
+{% block content %}
+<style>
+.alerts-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.alerts-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+}
+
+.alerts-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.alerts-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.alert-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.alert-counter.unread {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.alert-counter.clear {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.premium-alert-table {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.premium-alert-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.premium-alert-table thead {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+}
+
+.premium-alert-table thead th {
+    color: white;
+    padding: 18px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+.premium-alert-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.premium-alert-table tbody tr:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: scale(1.005);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.premium-alert-table tbody tr.unread-row {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-left: 4px solid #f59e0b;
+}
+
+.premium-alert-table tbody tr.unread-row:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+}
+
+.premium-alert-table tbody td {
+    padding: 20px 16px;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.priority-critical {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.priority-high {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.priority-medium {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.priority-low {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+.new-badge {
+    display: inline-block;
+    margin-top: 5px;
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 700;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.product-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+.product-expired {
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 5px;
+    display: block;
+}
+
+.level-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.level-expired {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+}
+
+.level-last_chance {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.level-urgent {
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+    color: white;
+}
+
+.level-soon {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: white;
+}
+
+.level-warning {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    color: white;
+}
+
+.level-normal {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.message-cell {
+    max-width: 300px;
+    line-height: 1.5;
+    color: #495057;
+}
+
+.time-remaining {
+    font-weight: 700;
+    font-size: 16px;
+    display: block;
+}
+
+.time-critical {
+    color: #dc2626;
+}
+
+.time-warning {
+    color: #f59e0b;
+}
+
+.time-safe {
+    color: #10b981;
+}
+
+.created-date {
+    font-size: 13px;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 140px;
+}
+
+.action-buttons .btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state-icon {
+    font-size: 100px;
+    margin-bottom: 25px;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+.empty-state h2 {
+    color: #10b981;
+    margin-bottom: 15px;
+    font-size: 2rem;
+}
+
+.empty-state p {
+    color: #6b7280;
+    font-size: 18px;
+}
+</style>
+
+<div class="alerts-container">
+    <div class="alerts-header">
+        <h1>
+            <span>🔔</span>
+            <span>Product Expiry Alerts</span>
+        </h1>
+        <div class="alerts-toolbar" style="margin-top: 20px;">
+            <a href="{% url 'seller_dashboard' %}" class="btn" style="background: white; color: #ef4444; font-weight: 600;">
+                ← Back to Dashboard
+            </a>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                {% if unread_count > 0 %}
+                <span class="alert-counter unread">
+                    <span>🔴</span>
+                    <span>{{ unread_count }} Unread Alert{{ unread_count|pluralize }}</span>
+                </span>
+                <a href="{% url 'mark_all_alerts_read' %}" class="btn" style="background: white; color: #10b981; font-weight: 600;">
+                    ✓ Mark All as Read
+                </a>
+                {% else %}
+                <span class="alert-counter clear">
+                    <span>✓</span>
+                    <span>All Caught Up!</span>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if alerts %}
+    <div class="premium-alert-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Priority</th>
+                    <th>Product</th>
+                    <th>Alert Level</th>
+                    <th>Message</th>
+                    <th>Time Remaining</th>
+                    <th>Created</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr class="{% if not alert.is_read %}unread-row{% endif %}">
+                    <td>
+                        <span class="priority-badge priority-{% if alert.priority == 1 %}critical{% elif alert.priority == 2 %}high{% elif alert.priority == 3 %}medium{% else %}low{% endif %}">
+                            {% if alert.priority == 1 %}🔴 Critical
+                            {% elif alert.priority == 2 %}🟠 High
+                            {% elif alert.priority == 3 %}🔵 Medium
+                            {% else %}⚪ Low{% endif %}
+                        </span>
+                        
+                        {% if not alert.is_read %}
+                        <span class="new-badge">● NEW</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td>
+                        <div class="product-name">{{ alert.product.name }}</div>
+                        {% if alert.product.status == 'expired' %}
+                        <span class="product-expired">⚠️ EXPIRED</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td>
+                        <span class="level-badge level-{{ alert.alert_level }}">
+                            {% if alert.alert_level == 'expired' %}💀 Expired
+                            {% elif alert.alert_level == 'last_chance' %}⚡ Last Chance
+                            {% elif alert.alert_level == 'urgent' %}🔥 Urgent
+                            {% elif alert.alert_level == 'soon' %}⏰ Soon
+                            {% elif alert.alert_level == 'warning' %}⚠️ Warning
+                            {% else %}✅ Normal{% endif %}
+                        </span>
+                    </td>
+                    
+                    <td class="message-cell">{{ alert.message }}</td>
+                    
+                    <td>
+                        <span class="time-remaining {% if alert.product.remaining_seconds <= 3600 %}time-critical{% elif alert.product.remaining_seconds <= 86400 %}time-warning{% else %}time-safe{% endif %}">
+                            {{ alert.product.countdown_display }}
+                        </span>
+                    </td>
+                    
+                    <td>
+                        <div class="created-date">{{ alert.created_at|date:"M d, Y" }}</div>
+                        <div class="created-date" style="font-size: 11px; color: #999;">{{ alert.created_at|date:"h:i A" }}</div>
+                    </td>
+                    
+                    <td>
+                        <div class="action-buttons">
+                            {% if not alert.is_read %}
+                            <a href="{% url 'mark_alert_read' alert.id %}" class="btn btn-success">
+                                ✓ Mark Read
+                            </a>
+                            {% endif %}
+                            
+                            {% if alert.product.status != 'expired' %}
+                            <a href="{% url 'edit_product' alert.product.id %}" class="btn btn-secondary">
+                                ✎ Edit Product
+                            </a>
+                            
+                            {% if alert.product.recommended_discount > 0 and not alert.product.has_discount %}
+                            <form method="post" action="{% url 'apply_discount' alert.product.id %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="discount" value="{{ alert.product.recommended_discount }}">
+                                <button type="submit" class="btn btn-warning" style="width: 100%;">
+                                    💰 {{ alert.product.recommended_discount }}% Off
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% endif %}
+                            
+                            <form method="post" action="{% url 'delete_product_from_alert' alert.product.id %}" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete {{ alert.product.name }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" style="width: 100%;">
+                                    🗑️ Remove
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🎉</div>
+        <h2>All Clear!</h2>
+        <p>No alerts at the moment. All your products are fresh and healthy!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

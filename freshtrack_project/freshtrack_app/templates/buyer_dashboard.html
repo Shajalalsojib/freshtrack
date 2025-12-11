@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Products - FreshTrack{% endblock %}
+
+{% block content %}
+<h1>🛒 Browse Fresh Products</h1>
+
+<!-- Tracking Stats Dashboard -->
+{% if waste_stats %}
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div style="padding: 10px;">
+            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">💰 Total Discount Value</div>
+            <div style="font-size: 24px; font-weight: bold;">৳{{ waste_stats.total_discount_value|floatformat:0 }}</div>
+        </div>
+        <div style="padding: 10px;">
+            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">⚠️ Products at Risk</div>
+            <div style="font-size: 24px; font-weight: bold;">{{ waste_stats.products_at_risk }}</div>
+        </div>
+        <div style="padding: 10px;">
+            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">🛍️ Recent Purchases</div>
+            <div style="font-size: 24px; font-weight: bold;">{{ waste_stats.recent_purchases }}</div>
+        </div>
+        <div style="padding: 10px;">
+            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">♻️ Waste Prevented</div>
+            <div style="font-size: 24px; font-weight: bold;">৳{{ waste_stats.estimated_waste_prevented|floatformat:0 }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Money Saving Deals -->
+{% if money_saving_deals %}
+<div style="margin-bottom: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2 style="margin-top: 0; color: #059669;">💸 Top Money-Saving Deals</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+        {% for deal in money_saving_deals %}
+        <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 6px; padding: 12px; text-align: center;">
+            <div style="font-weight: bold; margin-bottom: 5px; color: #000;">{{ deal.product.name }}</div>
+            <div style="font-size: 20px; color: #059669; font-weight: bold;">{{ deal.discount }}% OFF</div>
+            <div style="font-size: 12px; color: #666;">Save ৳{{ deal.savings|floatformat:0 }}</div>
+            <div style="font-size: 11px; color: #f97316; font-weight: 600; margin-top: 5px;">{{ deal.hours|floatformat:1 }}h left</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Search Bar -->
+<div style="margin-bottom: 20px;">
+    <form method="get" action="{% url 'buyer_dashboard' %}" style="display: flex; gap: 10px; align-items: center; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <input 
+            type="text" 
+            name="q" 
+            value="{{ search_query }}" 
+            placeholder="🔍 Search by product name or seller/company..." 
+            style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 15px;"
+        >
+        <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">Search</button>
+        {% if search_query %}
+        <a href="{% url 'buyer_dashboard' %}" class="btn" style="padding: 12px 24px;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Filter Buttons -->
+<div style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <a href="{% url 'buyer_dashboard' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="btn">All Products</a>
+    <a href="?alert=urgent{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-danger">Urgent Deals</a>
+    <a href="?alert=soon{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-warning">Expiring Soon</a>
+</div>
+
+<!-- Results Info -->
+<div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        {% if search_query %}
+        <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #2196F3; display: inline-block;">
+            <strong>Search results for:</strong> "{{ search_query }}"
+            <span style="color: #666;">({{ total_products }} product{{ total_products|pluralize }} found)</span>
+        </div>
+        {% else %}
+        <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 6px; display: inline-block;">
+            <strong>Total Products:</strong> {{ total_products }}
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if products.has_other_pages %}
+    <div style="color: #666; font-size: 14px;">
+        Page {{ products.number }} of {{ products.paginator.num_pages }}
+    </div>
+    {% endif %}
+</div>
+
+<div class="product-grid">
+    {% for product in products %}
+    <div class="product-card" style="position: relative;">
+        <!-- Discount Badge -->
+        {% if product.has_discount %}
+        <div style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; padding: 6px 10px; border-radius: 15px; font-weight: 700; font-size: 12px; box-shadow: 0 2px 8px rgba(239,68,68,0.4); z-index: 5;">
+            🏷️ {{ product.get_final_discount }}% OFF
+        </div>
+        {% endif %}
+        
+        <div class="product-header">
+            <div class="product-name">{{ product.name }}</div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+                {% if product.has_discount %}
+                <div style="text-decoration: line-through; color: #9ca3af; font-size: 14px;">৳{{ product.price|floatformat:2 }}</div>
+                <div class="product-price" style="color: #ef4444; font-size: 20px;">৳{{ product.get_discounted_price|floatformat:2 }}</div>
+                <div style="font-size: 11px; color: #059669; font-weight: 600;">Save ৳{{ product.get_savings|floatformat:2 }}</div>
+                {% else %}
+                <div class="product-price">৳{{ product.price|floatformat:2 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="product-info">
+            <div class="info-row">
+                <span class="label">Seller:</span>
+                <span class="value">{{ product.seller.company_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Available:</span>
+                <span class="value">{{ product.quantity }} units</span>
+            </div>
+            <div class="info-row" style="align-items: center;">
+                <span class="label">Rating:</span>
+                <span class="value" style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #FFD700; font-size: 18px; line-height: 1;">
+                        {% with stars=product.get_rating_stars %}
+                            {% for i in "12345"|slice:stars.full %}★{% endfor %}{% if stars.half %}☆{% endif %}{% for i in "12345"|slice:stars.empty %}☆{% endfor %}
+                        {% endwith %}
+                    </span>
+                    <span style="color: #7f8c8d; font-size: 13px;">({{ product.get_rating_count }})</span>
+                </span>
+            </div>
+            <!-- Hour-Based Tracking Display -->
+            {% if product.hours_status %}
+            <div style="background: {% if product.hours_status.class == 'danger' %}#fee2e2{% elif product.hours_status.class == 'warning' %}#fef3c7{% else %}#f0fdf4{% endif %}; border-left: 4px solid {% if product.hours_status.class == 'danger' %}#ef4444{% elif product.hours_status.class == 'warning' %}#f59e0b{% else %}#22c55e{% endif %}; padding: 8px 10px; border-radius: 4px; margin: 8px 0; font-weight: 600; color: {% if product.hours_status.class == 'danger' %}#991b1b{% elif product.hours_status.class == 'warning' %}#92400e{% else %}#166534{% endif %}; font-size: 13px;">
+                ⏰ {{ product.hours_status.label }}
+            </div>
+            {% endif %}
+            <div class="hours-left">⏱️ <span data-expiry="{{ product.expiry_datetime.timestamp|floatformat:0 }}000">{{
+                    product.countdown_timer }}</span></div>
+            <span class="alert-badge alert-{{ product.alert_level }}">
+                {% if product.alert_level == 'expired' %}
+                Expired
+                {% elif product.alert_level == 'last_chance' %}
+                Last Chance
+                {% elif product.alert_level == 'urgent' %}
+                Urgent Alert
+                {% elif product.alert_level == 'soon' %}
+                Expiring Soon
+                {% elif product.alert_level == 'warning' %}
+                Early Warning
+                {% else %}
+                Fresh
+                {% endif %}
+            </span>
+        </div>
+        <div class="product-footer" style="display: flex; gap: 10px;">
+            <form method="POST" action="{% url 'add_to_cart' product.id %}" style="flex: 1;">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    🛒 Add to Cart
+                </button>
+            </form>
+            <a href="{% url 'product_detail' product.id %}" class="btn btn-success" style="flex: 0 0 auto; padding: 12px 20px;">
+                👁️
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="font-size: 48px; margin-bottom: 15px;">📦</div>
+        {% if search_query %}
+        <h3 style="color: #555; margin-bottom: 10px;">No Products Found</h3>
+        <p style="color: #777;">No products found for "{{ search_query }}". Try a different search term.</p>
+        <a href="{% url 'buyer_dashboard' %}" class="btn btn-primary" style="margin-top: 15px;">View All Products</a>
+        {% else %}
+        <h3 style="color: #555; margin-bottom: 10px;">No Products Available</h3>
+        <p style="color: #777;">Check back soon for fresh products!</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if products.has_other_pages %}
+<div style="margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+    {% if products.has_previous %}
+    <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if alert_level %}&alert={{ alert_level }}{% endif %}" 
+       class="btn" 
+       style="padding: 10px 15px;">
+        ⏮️ First
+    </a>
+    <a href="?page={{ products.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if alert_level %}&alert={{ alert_level }}{% endif %}" 
+       class="btn btn-primary" 
+       style="padding: 10px 20px;">
+        ← Previous
+    </a>
+    {% else %}
+    <button class="btn" disabled style="padding: 10px 15px; opacity: 0.5; cursor: not-allowed;">⏮️ First</button>
+    <button class="btn" disabled style="padding: 10px 20px; opacity: 0.5; cursor: not-allowed;">← Previous</button>
+    {% endif %}
+    
+    <div style="background: white; padding: 10px 20px; border-radius: 6px; border: 2px solid #4CAF50; font-weight: bold; color: #4CAF50;">
+        Page {{ products.number }} of {{ products.paginator.num_pages }}
+    </div>
+    
+    {% if products.has_next %}
+    <a href="?page={{ products.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if alert_level %}&alert={{ alert_level }}{% endif %}" 
+       class="btn btn-primary" 
+       style="padding: 10px 20px;">
+        Next →
+    </a>
+    <a href="?page={{ products.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if alert_level %}&alert={{ alert_level }}{% endif %}" 
+       class="btn" 
+       style="padding: 10px 15px;">
+        Last ⏭️
+    </a>
+    {% else %}
+    <button class="btn" disabled style="padding: 10px 20px; opacity: 0.5; cursor: not-allowed;">Next →</button>
+    <button class="btn" disabled style="padding: 10px 15px; opacity: 0.5; cursor: not-allowed;">Last ⏭️</button>
+    {% endif %}
+</div>
+
+<!-- Page Numbers -->
+<div style="margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 5px; flex-wrap: wrap;">
+    {% for page_num in products.paginator.page_range %}
+        {% if page_num == products.number %}
+        <span style="background: #4CAF50; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold;">
+            {{ page_num }}
+        </span>
+        {% elif page_num >= products.number|add:"-3" and page_num <= products.number|add:"3" %}
+        <a href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if alert_level %}&alert={{ alert_level }}{% endif %}" 
+           style="background: white; color: #333; padding: 8px 12px; border-radius: 4px; text-decoration: none; border: 1px solid #ddd;">
+            {{ page_num }}
+        </a>
+        {% elif page_num == 1 or page_num == products.paginator.num_pages %}
+        <a href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if alert_level %}&alert={{ alert_level }}{% endif %}" 
+           style="background: white; color: #333; padding: 8px 12px; border-radius: 4px; text-decoration: none; border: 1px solid #ddd;">
+            {{ page_num }}
+        </a>
+        {% elif page_num == products.number|add:"-4" or page_num == products.number|add:"4" %}
+        <span style="padding: 8px 12px; color: #999;">...</span>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

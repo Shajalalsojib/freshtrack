@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+
+{% block title %}Purchase History - FreshTrack{% endblock %}
+
+{% block content %}
+<style>
+.history-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.history-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.history-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.premium-table-wrapper {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.premium-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.premium-table thead {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+}
+
+.premium-table thead th {
+    color: white;
+    padding: 18px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+.premium-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.premium-table tbody tr:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.premium-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.premium-table tbody td {
+    padding: 20px 16px;
+    vertical-align: middle;
+    font-size: 14px;
+    color: #333;
+}
+
+.product-cell {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+.seller-cell {
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.price-cell {
+    font-weight: 600;
+    color: #34495e;
+    font-size: 15px;
+}
+
+.quantity-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1976D2;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 50px;
+    text-align: center;
+}
+
+.total-cell {
+    font-weight: 700;
+    color: #4CAF50;
+    font-size: 16px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-radius: 8px;
+    padding: 8px 12px !important;
+}
+
+.payment-method-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1976D2;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    min-width: 110px;
+    justify-content: center;
+}
+
+.status-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+}
+
+.status-failed {
+    background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+    color: white;
+}
+
+.status-initiated {
+    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+    color: white;
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%);
+    color: white;
+}
+
+.transaction-id {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #667eea;
+    font-weight: 600;
+    border: 1px solid #e0e0e0;
+    display: inline-block;
+}
+
+.date-cell {
+    color: #7f8c8d;
+    font-weight: 500;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: #7f8c8d;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.action-cell {
+    text-align: center;
+    padding: 20px 16px !important;
+}
+
+@media (max-width: 768px) {
+    .premium-table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .premium-table {
+        min-width: 1200px;
+    }
+}
+
+.invoice-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4);
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.invoice-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    color: white;
+    text-decoration: none;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.review-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 12px rgba(255, 193, 7, 0.4);
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.review-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(255, 193, 7, 0.5);
+    color: white;
+    text-decoration: none;
+}
+
+.review-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+    color: white;
+}
+
+.action-cell {
+    text-align: center;
+}
+</style>
+
+<div class="history-container">
+    <div class="history-header">
+        <h1>
+            <span>📋</span>
+            <span>Your Purchase History</span>
+        </h1>
+        <a href="{% url 'buyer_dashboard' %}" class="btn" style="margin-top: 15px; background: white; color: #667eea; font-weight: 600;">
+            ← Back to Products
+        </a>
+    </div>
+
+    {% if purchases %}
+    <div class="premium-table-wrapper">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Seller</th>
+                    <th>Price</th>
+                    <th style="text-align: center;">Quantity</th>
+                    <th>Total Amount</th>
+                    <th>Payment Method</th>
+                    <th style="text-align: center;">Status</th>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th style="text-align: center;">Invoice</th>
+                    <th style="text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for purchase in purchases %}
+                <tr>
+                    <td class="product-cell">{{ purchase.product_name }}</td>
+                    <td class="seller-cell">{{ purchase.seller_name }}</td>
+                    <td class="price-cell">৳{{ purchase.price }}</td>
+                    <td style="text-align: center;">
+                        <span class="quantity-badge">{{ purchase.quantity }}</span>
+                    </td>
+                    <td class="total-cell">৳{{ purchase.total_price }}</td>
+                    <td>
+                        {% if purchase.payment_method %}
+                            <span class="payment-method-badge">
+                                <span>💳</span>
+                                <span>{{ purchase.get_payment_method_display }}</span>
+                            </span>
+                        {% else %}
+                            <span style="color: #999;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if purchase.payment_status == 'success' %}
+                            <span class="status-badge status-success">
+                                <span>✓</span>
+                                <span>Success</span>
+                            </span>
+                        {% elif purchase.payment_status == 'failed' %}
+                            <span class="status-badge status-failed">
+                                <span>✗</span>
+                                <span>Failed</span>
+                            </span>
+                        {% elif purchase.payment_status == 'initiated' %}
+                            <span class="status-badge status-initiated">
+                                <span>⏳</span>
+                                <span>Initiated</span>
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-pending">
+                                <span>⚠</span>
+                                <span>Pending</span>
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if purchase.transaction_id %}
+                            <span class="transaction-id">{{ purchase.transaction_id }}</span>
+                        {% else %}
+                            <span style="color: #999;">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="date-cell">
+                        {% if purchase.payment_completed_at %}
+                            {{ purchase.payment_completed_at|date:"Dec d, Y" }}<br>
+                            <small style="color: #999;">{{ purchase.payment_completed_at|date:"h:i A" }}</small>
+                        {% else %}
+                            {{ purchase.purchased_at|date:"Dec d, Y" }}<br>
+                            <small style="color: #999;">{{ purchase.purchased_at|date:"h:i A" }}</small>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if purchase.payment_status == 'success' %}
+                            <a href="{% url 'download_invoice' purchase.id %}" class="invoice-btn" title="Download Purchased Invoice as PDF" download>
+                                <span style="font-size: 16px;">📄</span>
+                                <span>Download Invoice PDF</span>
+                            </a>
+                        {% else %}
+                            <span style="color: #ccc; font-size: 12px;">
+                                {% if purchase.payment_status == 'failed' %}
+                                    ❌ Failed
+                                {% elif purchase.payment_status == 'initiated' %}
+                                    ⏳ Processing
+                                {% else %}
+                                    ⚠ Pending
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="action-cell" style="text-align: center;">
+                        {% if purchase.payment_status == 'success' %}
+                            {% if purchase.product %}
+                                <a href="{% url 'add_review' purchase.id %}" class="review-btn" title="Add or edit review">
+                                    <span style="font-size: 14px;">⭐</span>
+                                    <span>{% if purchase.review %}Edit Review{% else %}Add Review{% endif %}</span>
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #ccc; font-size: 12px;">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🛒</div>
+        <h3>No Purchase History Yet</h3>
+        <p style="color: #7f8c8d; margin-bottom: 25px;">Start shopping for fresh products today!</p>
+        <a href="{% url 'buyer_dashboard' %}" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px; font-weight: 600;">
+            Browse Products
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,315 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Products - Admin</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #8b5cf6;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .filter-tab.all {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+        
+        .filter-tab.pending {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .filter-tab.approved {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .filter-tab.rejected {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .products-table thead {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .products-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .products-table tbody {
+            max-height: 700px;
+            overflow-y: auto;
+        }
+        
+        .products-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+        }
+        
+        .products-table tbody tr:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 2px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-approve {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .btn-approve:hover {
+            background-color: #059669;
+            transform: scale(1.05);
+        }
+        
+        .btn-reject {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .btn-reject:hover {
+            background-color: #dc2626;
+            transform: scale(1.05);
+        }
+        
+        .btn-pending {
+            background-color: #f59e0b;
+            color: white;
+        }
+        
+        .btn-pending:hover {
+            background-color: #d97706;
+            transform: scale(1.05);
+        }
+        
+        .table-wrapper {
+            max-height: 750px;
+            overflow-y: auto;
+            border-radius: 12px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 All Products ({{ all_products.count }})</h1>
+            <a href="{% url 'admin_dashboard' %}" class="back-btn">
+                ⬅️ Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="filter-tabs">
+            <div class="filter-tab all">All Products ({{ all_products.count }})</div>
+            <div class="filter-tab pending">Pending ({{ pending_products.count }})</div>
+            <div class="filter-tab approved">Approved ({{ approved_products.count }})</div>
+            <div class="filter-tab rejected">Rejected ({{ rejected_products.count }})</div>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Product Name</th>
+                        <th>Seller</th>
+                        <th>Price</th>
+                        <th>Discount</th>
+                        <th>Quantity</th>
+                        <th>Expiry Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in all_products %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ product.name }}</strong></td>
+                        <td>{{ product.seller.user.username }}</td>
+                        <td>৳{{ product.price }}</td>
+                        <td>{{ product.discount_percent }}%</td>
+                        <td>{{ product.quantity }}</td>
+                        <td>{{ product.expiry_date }}</td>
+                        <td>
+                            <span class="status-badge status-{{ product.status }}">
+                                {{ product.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if product.status == 'pending' %}
+                                <a href="{% url 'approve_product' product.id %}" class="action-btn btn-approve">
+                                    ✓ Approve
+                                </a>
+                                <a href="{% url 'reject_product' product.id %}" class="action-btn btn-reject">
+                                    ✗ Reject
+                                </a>
+                            {% elif product.status == 'approved' %}
+                                <a href="{% url 'reject_product' product.id %}" class="action-btn btn-reject">
+                                    ✗ Reject
+                                </a>
+                                <a href="{% url 'pending_product' product.id %}" class="action-btn btn-pending">
+                                    ⏸ Pending
+                                </a>
+                            {% elif product.status == 'rejected' %}
+                                <a href="{% url 'approve_product' product.id %}" class="action-btn btn-approve">
+                                    ✓ Approve
+                                </a>
+                                <a href="{% url 'pending_product' product.id %}" class="action-btn btn-pending">
+                                    ⏸ Pending
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #9ca3af;">
+                            No products found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - FreshTrack{% endblock %}
+
+{% block content %}
+<style>
+.checkout-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.checkout-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+}
+
+.checkout-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.checkout-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 40px;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-name {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.item-meta {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.item-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.payment-option {
+    position: relative;
+}
+
+.payment-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.payment-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.payment-option input[type="radio"]:checked + .payment-label {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.payment-label:hover {
+    border-color: #10b981;
+    transform: translateY(-2px);
+}
+
+.payment-icon {
+    font-size: 24px;
+}
+
+.order-summary {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-radius: 12px;
+    padding: 25px;
+    margin: 30px 0;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-size: 1.1rem;
+}
+
+.summary-total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid #d1d5db;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.checkout-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.checkout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.back-btn {
+    display: inline-block;
+    margin-top: 20px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    color: #764ba2;
+    transform: translateX(-5px);
+}
+</style>
+
+<div class="checkout-container">
+    <div class="checkout-header">
+        <h1>
+            <span>💳</span>
+            <span>Checkout</span>
+        </h1>
+    </div>
+
+    <div class="checkout-content">
+        <form method="POST" action="{% url 'process_cart_payment' %}">
+            {% csrf_token %}
+            
+            <!-- Order Items -->
+            <div class="section-title">📦 Order Items ({{ total_items }})</div>
+            
+            {% for item in cart_items %}
+            <div class="order-item">
+                <div class="item-info">
+                    <div class="item-name">{{ item.product.name }}</div>
+                    <div class="item-meta">
+                        {{ item.quantity }} × ৳{{ item.product.get_discounted_price }} • 
+                        {{ item.product.seller.company_name }}
+                    </div>
+                </div>
+                <div class="item-price">৳{{ item.get_total_price }}</div>
+            </div>
+            {% endfor %}
+            
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <div class="summary-row">
+                    <span>Subtotal ({{ total_items }} items)</span>
+                    <span>৳{{ subtotal }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Delivery Fee</span>
+                    <span style="color: #10b981; font-weight: 600;">FREE</span>
+                </div>
+                <div class="summary-total">
+                    <span>Total Amount</span>
+                    <span style="color: #10b981;">৳{{ subtotal }}</span>
+                </div>
+            </div>
+            
+            <!-- Payment Method -->
+            <div class="section-title">💰 Select Payment Method</div>
+            
+            <div class="payment-methods">
+                <div class="payment-option">
+                    <input type="radio" id="card" name="payment_method" value="card" required>
+                    <label for="card" class="payment-label">
+                        <span class="payment-icon">💳</span>
+                        <span>Credit/Debit Card</span>
+                    </label>
+                </div>
+                
+                <div class="payment-option">
+                    <input type="radio" id="bkash" name="payment_method" value="bkash">
+                    <label for="bkash" class="payment-label">
+                        <span class="payment-icon">📱</span>
+                        <span>bKash</span>
+                    </label>
+                </div>
+                
+                <div class="payment-option">
+                    <input type="radio" id="nagad" name="payment_method" value="nagad">
+                    <label for="nagad" class="payment-label">
+                        <span class="payment-icon">📲</span>
+                        <span>Nagad</span>
+                    </label>
+                </div>
+                
+                <div class="payment-option">
+                    <input type="radio" id="rocket" name="payment_method" value="rocket">
+                    <label for="rocket" class="payment-label">
+                        <span class="payment-icon">🚀</span>
+                        <span>Rocket</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="checkout-btn">
+                🔒 Pay ৳{{ subtotal }} Securely
+            </button>
+            
+            <a href="{% url 'view_cart' %}" class="back-btn">← Back to Cart</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Canceled - FreshTrack{% endblock %}
+
+{% block content %}
+<style>
+.demo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+</style>
+
+<div style="max-width: 700px; margin: 50px auto; text-align: center;">
+    <div style="background: white; padding: 50px; border-radius: 20px; box-shadow: 0 8px 32px rgba(255, 152, 0, 0.2); border: 2px solid #FF9800;">
+        
+        <!-- DEMO Badge -->
+        <div class="demo-badge">
+            🧪 SANDBOX MODE - Test Payment Only
+        </div>
+        
+        <div style="font-size: 100px; color: #FF9800; margin-bottom: 20px;">⚠️</div>
+        
+        <h1 style="color: #FF9800; margin-bottom: 15px; font-size: 2.5rem;">Payment Canceled</h1>
+        
+        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+            You have canceled the <strong>demo payment</strong> process.
+        </p>
+        
+        <div style="background: #e3f2fd; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #2196F3;">
+            <p style="margin: 0; font-size: 14px; color: #1565C0;">
+                <strong>ℹ️ Demo Mode:</strong> No charges were made. This was a test transaction in SSLCommerz Sandbox.
+            </p>
+        </div>
+        
+        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            {% if product_id %}
+            <a href="{% url 'checkout' product_id %}" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;">
+                Try Again
+            </a>
+            {% endif %}
+            <a href="{% url 'buyer_dashboard' %}" class="btn" style="padding: 12px 30px; font-size: 16px;">
+                Back to Products
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

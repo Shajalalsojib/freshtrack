@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if existing_review %}Edit{% else %}Add{% endif %} Review - FreshTrack{% endblock %}
+
+{% block content %}
+<style>
+.review-container {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.review-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 40px;
+}
+
+.review-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.review-header h1 {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.product-info {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    border-left: 4px solid #4CAF50;
+}
+
+.product-info h3 {
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    font-size: 1.3rem;
+}
+
+.product-info p {
+    color: #7f8c8d;
+    margin: 5px 0;
+}
+
+.rating-section {
+    margin-bottom: 30px;
+}
+
+.rating-section label {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.star-rating {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 3rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: #FFD700;
+    transform: scale(1.1);
+}
+
+.star-rating {
+    direction: rtl;
+}
+
+.star-rating label {
+    direction: ltr;
+}
+
+.comment-section {
+    margin-bottom: 30px;
+}
+
+.comment-section label {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.comment-section textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+.comment-section textarea:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.btn-cancel {
+    background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%);
+    color: white;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 16px rgba(158, 158, 158, 0.3);
+}
+
+.btn-cancel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(158, 158, 158, 0.4);
+    color: white;
+}
+
+.existing-review-notice {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    border: 2px solid #ffc107;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    color: #856404;
+    font-weight: 500;
+}
+
+.delete-review {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+    color: white;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+    color: white;
+}
+</style>
+
+<div class="review-container">
+    <div class="review-card">
+        <div class="review-header">
+            <h1>{% if existing_review %}✏️ Edit Your Review{% else %}⭐ Rate Your Purchase{% endif %}</h1>
+        </div>
+
+        <div class="product-info">
+            <h3>{{ purchase.product_name }}</h3>
+            <p><strong>Seller:</strong> {{ purchase.seller_name }}</p>
+            <p><strong>Purchase Date:</strong> {{ purchase.payment_completed_at|date:"F d, Y" }}</p>
+            <p><strong>Amount:</strong> ৳{{ purchase.total_price }}</p>
+        </div>
+
+        {% if existing_review %}
+        <div class="existing-review-notice">
+            <strong>ℹ️ Editing Existing Review</strong><br>
+            You previously rated this product {{ existing_review.rating }} stars. Update your rating and review below.
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="rating-section">
+                <label>How would you rate this product?</label>
+                <div class="star-rating">
+                    <input type="radio" name="rating" id="star5" value="5" {% if existing_review and existing_review.rating == 5 %}checked{% endif %} required>
+                    <label for="star5">★</label>
+                    
+                    <input type="radio" name="rating" id="star4" value="4" {% if existing_review and existing_review.rating == 4 %}checked{% endif %}>
+                    <label for="star4">★</label>
+                    
+                    <input type="radio" name="rating" id="star3" value="3" {% if existing_review and existing_review.rating == 3 %}checked{% endif %}>
+                    <label for="star3">★</label>
+                    
+                    <input type="radio" name="rating" id="star2" value="2" {% if existing_review and existing_review.rating == 2 %}checked{% endif %}>
+                    <label for="star2">★</label>
+                    
+                    <input type="radio" name="rating" id="star1" value="1" {% if existing_review and existing_review.rating == 1 %}checked{% endif %}>
+                    <label for="star1">★</label>
+                </div>
+            </div>
+
+            <div class="comment-section">
+                <label>Share your experience (optional)</label>
+                <textarea name="comment" placeholder="Tell other buyers about your experience with this product...">{% if existing_review %}{{ existing_review.comment }}{% endif %}</textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-submit">
+                    {% if existing_review %}Update Review{% else %}Submit Review{% endif %}
+                </button>
+                <a href="{% url 'buyer_history' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+
+        {% if existing_review %}
+        <div class="delete-review">
+            <p style="color: #7f8c8d; margin-bottom: 10px;">Want to remove your review?</p>
+            <a href="{% url 'delete_review' existing_review.id %}" class="btn-delete" onclick="return confirm('Are you sure you want to delete this review?')">
+                Delete Review
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FreshTrack{% endblock %}</title>
+    {% load static %}
+    <!-- Fresh Eco-Friendly Design -->
+    <link rel="stylesheet" href="{% static 'css/freshtrack-eco.css' %}">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="logo">🍎 FreshTrack</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                {% if user.is_authenticated %}
+                {% if user.role.role == 'buyer' %}
+                <li><a href="{% url 'buyer_dashboard' %}">Products</a></li>
+                <li><a href="{% url 'view_cart' %}" style="position: relative;">
+                    🛒 Cart
+                    {% if cart_count %}
+                    <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 700;">{{ cart_count }}</span>
+                    {% endif %}
+                </a></li>
+                <li><a href="{% url 'buyer_history' %}">History</a></li>
+                {% elif user.role.role == 'seller' %}
+                <li><a href="{% url 'seller_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'seller_alerts' %}">Alerts</a></li>
+                {% elif user.role.role == 'admin' or user.is_staff %}
+                <li><a href="{% url 'admin_dashboard' %}">Admin</a></li>
+                {% endif %}
+                <li><a href="{% url 'logout' %}">Logout</a></li>
+                {% else %}
+                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="{% url 'register' %}">Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer style="text-align: center; padding: 30px 0; color: white; margin-top: 50px;">
+        <p>&copy; 2025 FreshTrack. Prevent waste, save money, enjoy freshness.</p>
+    </footer>
+
+    <script>
+        // Apply role-based color theme
+        document.addEventListener('DOMContentLoaded', function () {
+            var userRole = '{{ user.role.role|default:"none" }}';
+            var body = document.body;
+
+            if (userRole === 'buyer') {
+                body.classList.add('buyer-theme');
+            } else if (userRole === 'seller') {
+                body.classList.add('seller-theme');
+            } else if (userRole === 'admin' || '{{ user.is_staff }}' === 'True') {
+                body.classList.add('admin-theme');
+            } else if ('{{ request.resolver_match.url_name }}' === 'login' || '{{ request.resolver_match.url_name }}' === 'register') {
+                body.classList.add('login-theme');
+            }
+        });
+
+        // Real-time countdown timer
+        document.addEventListener('DOMContentLoaded', function () {
+            // Find all countdown elements with data-expiry attribute
+            const countdownElements = document.querySelectorAll('[data-expiry]');
+
+            function updateCountdowns() {
+                const now = new Date().getTime();
+
+                countdownElements.forEach(element => {
+                    const expiryTime = parseInt(element.getAttribute('data-expiry'));
+                    const remainingMs = expiryTime - now;
+
+                    if (remainingMs <= 0) {
+                        element.textContent = 'EXPIRED';
+                        element.style.color = '#e74c3c';
+                    } else {
+                        const remainingSeconds = Math.floor(remainingMs / 1000);
+                        element.textContent = remainingSeconds + 's';
+                    }
+                });
+            }
+
+            // Update immediately
+            updateCountdowns();
+
+            // Update every second
+            setInterval(updateCountdowns, 1000);
+        });
+    </script>
+</body>
+
+</html>

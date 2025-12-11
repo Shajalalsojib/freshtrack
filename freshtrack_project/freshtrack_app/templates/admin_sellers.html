@@ -1,0 +1,277 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sellers Management - Admin</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #6366f1;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+        }
+        
+        .sellers-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .sellers-table thead {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .sellers-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .sellers-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+        }
+        
+        .sellers-table tbody tr:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-hold {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 2px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-approve {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .btn-approve:hover {
+            background-color: #059669;
+            transform: scale(1.05);
+        }
+        
+        .btn-reject {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .btn-reject:hover {
+            background-color: #dc2626;
+            transform: scale(1.05);
+        }
+        
+        .btn-hold {
+            background-color: #6366f1;
+            color: white;
+        }
+        
+        .btn-hold:hover {
+            background-color: #4f46e5;
+            transform: scale(1.05);
+        }
+        
+        .table-wrapper {
+            max-height: 750px;
+            overflow-y: auto;
+            border-radius: 12px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 Sellers Management ({{ sellers.count }})</h1>
+            <a href="{% url 'admin_dashboard' %}" class="back-btn">
+                ⬅️ Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="sellers-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Store Name</th>
+                        <th>Phone</th>
+                        <th>Total Products</th>
+                        <th>Approved Products</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seller in sellers %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ seller.user.username }}</strong></td>
+                        <td>{{ seller.user.email }}</td>
+                        <td>{{ seller.store_name|default:"N/A" }}</td>
+                        <td>{{ seller.phone|default:"N/A" }}</td>
+                        <td>{{ seller.products.count }}</td>
+                        <td>{{ seller.products.filter.count }}</td>
+                        <td>
+                            {% if seller.role %}
+                                <span class="status-badge status-{{ seller.role.is_approved|yesno:'approved,pending' }}">
+                                    {% if seller.role.is_approved %}
+                                        Approved
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-pending">No Role</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if seller.role %}
+                                {% if seller.role.is_approved %}
+                                    <a href="{% url 'reject_user' seller.role.id %}" class="action-btn btn-reject">
+                                        ✗ Reject
+                                    </a>
+                                    <a href="{% url 'hold_user' seller.role.id %}" class="action-btn btn-hold">
+                                        ⏸ Hold
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'approve_user' seller.role.id %}" class="action-btn btn-approve">
+                                        ✓ Approve
+                                    </a>
+                                    <a href="{% url 'reject_user' seller.role.id %}" class="action-btn btn-reject">
+                                        ✗ Reject
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #9ca3af;">No actions</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #9ca3af;">
+                            No sellers found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

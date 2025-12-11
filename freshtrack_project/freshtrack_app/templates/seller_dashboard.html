@@ -1,0 +1,725 @@
+{% extends 'base.html' %}
+
+{% block title %}Seller Dashboard - FreshTrack{% endblock %}
+
+{% block content %}
+<style>
+/* Premium Centered Dashboard Styles */
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.dashboard-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #10b981;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.dashboard-subtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Premium Summary Cards Grid */
+.summary-section {
+    margin-bottom: 3rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--card-color, #10b981), var(--card-color-light, #34d399));
+}
+
+.summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.15);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+    display: inline-block;
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.card-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.card-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Card Color Variants */
+.summary-card.card-primary { --card-color: #10b981; --card-color-light: #34d399; }
+.summary-card.card-success { --card-color: #10b981; --card-color-light: #6ee7b7; }
+.summary-card.card-warning { --card-color: #f59e0b; --card-color-light: #fbbf24; }
+.summary-card.card-danger { --card-color: #ef4444; --card-color-light: #f87171; }
+.summary-card.card-info { --card-color: #3b82f6; --card-color-light: #60a5fa; }
+.summary-card.card-purple { --card-color: #8b5cf6; --card-color-light: #a78bfa; }
+
+/* Quick Actions Centered */
+.quick-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+}
+
+.action-btn {
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn-primary {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    border: none;
+}
+
+.action-btn-warning {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+    border: none;
+}
+
+.action-btn-secondary {
+    background: white;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+}
+
+/* Sales Analytics Section */
+.analytics-section {
+    background: white;
+    border-radius: 1.25rem;
+    padding: 2.5rem;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.analytics-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
+}
+
+.analytics-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.analytics-icon {
+    font-size: 2rem;
+}
+
+.analytics-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #10b981;
+    margin: 0;
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    margin-bottom: 1rem;
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+}
+
+.no-data-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.no-data-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.no-data-subtext {
+    font-size: 0.9375rem;
+    color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-title {
+        font-size: 2rem;
+    }
+    
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .summary-card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .card-icon {
+        font-size: 2.5rem;
+    }
+    
+    .card-value {
+        font-size: 2rem;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .action-btn {
+        justify-content: center;
+    }
+    
+    .analytics-section {
+        padding: 1.5rem;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-title {
+        font-size: 1.75rem;
+    }
+}
+</style>
+
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <span>📊</span>
+            Seller Dashboard
+        </h1>
+        <p class="dashboard-subtitle">Manage your products and track your performance</p>
+    </div>
+
+    <!-- Premium Summary Cards -->
+    <div class="summary-section">
+        <div class="summary-grid">
+            <div class="summary-card card-primary">
+                <div class="card-icon">📦</div>
+                <div class="card-value">{{ total_products }}</div>
+                <div class="card-label">Total Products</div>
+            </div>
+            
+            <div class="summary-card card-success">
+                <div class="card-icon">✅</div>
+                <div class="card-value">{{ approved_count }}</div>
+                <div class="card-label">Approved</div>
+            </div>
+            
+            <div class="summary-card card-warning">
+                <div class="card-icon">⏳</div>
+                <div class="card-value">{{ pending_count }}</div>
+                <div class="card-label">Pending</div>
+            </div>
+            
+            <div class="summary-card card-danger">
+                <div class="card-icon">❌</div>
+                <div class="card-value">{{ rejected_count }}</div>
+                <div class="card-label">Rejected</div>
+            </div>
+            
+            <div class="summary-card card-danger">
+                <div class="card-icon">⚠️</div>
+                <div class="card-value">{{ expiring_24h }}</div>
+                <div class="card-label">Expiring 24h</div>
+            </div>
+            
+            <div class="summary-card card-danger">
+                <div class="card-icon">💀</div>
+                <div class="card-value">{{ expired_count }}</div>
+                <div class="card-label">Expired</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{% url 'add_product' %}" class="action-btn action-btn-primary">
+            <span>➕</span>
+            Add New Product
+        </a>
+        <a href="{% url 'seller_alerts' %}" class="action-btn action-btn-warning">
+            <span>🔔</span>
+            View Alerts
+        </a>
+        <a href="{% url 'seller_analytics' %}" class="action-btn action-btn-secondary">
+            <span>📊</span>
+            Analytics & Insights
+        </a>
+    </div>
+
+    <!-- Smart Alerts Section -->
+    {% if seller_alerts %}
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #f59e0b;">
+        <h2 style="margin-top: 0; color: #f59e0b;">🔔 Smart Alerts</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+            {% for alert in seller_alerts %}
+            <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                <div style="font-weight: 600; color: #000; margin-bottom: 5px;">{{ alert.product.name }}</div>
+                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">{{ alert.message }}</div>
+                <div style="font-size: 11px; color: #999;">
+                    Priority: 
+                    {% if alert.priority == 1 %}
+                    <span style="color: #ef4444; font-weight: bold;">🔴 Critical</span>
+                    {% elif alert.priority == 2 %}
+                    <span style="color: #f59e0b; font-weight: bold;">🟠 High</span>
+                    {% else %}
+                    <span style="color: #10b981; font-weight: bold;">🟢 Medium</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Waste Risk Products Section -->
+    {% if waste_risk_products %}
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #ef4444;">
+        <h2 style="margin-top: 0; color: #ef4444;">♻️ Products at Waste Risk</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+            {% for product_risk in waste_risk_products %}
+            <div style="background: #fee2e2; padding: 12px; border-radius: 6px; border-left: 3px solid #ef4444;">
+                <div style="font-weight: 600; color: #000; margin-bottom: 5px;">{{ product_risk.product.name }}</div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 12px; color: #666;">
+                        <strong>Time Left:</strong> {{ product_risk.hours|floatformat:1 }}h
+                    </span>
+                    <span style="font-size: 12px; color: #666;">
+                        <strong>Quantity:</strong> {{ product_risk.quantity }}
+                    </span>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                    <strong>Value at Risk:</strong> ৳{{ product_risk.total_value|floatformat:0 }}
+                </div>
+                <div style="font-size: 11px; font-weight: 600;">
+                    Risk Level: 
+                    {% if product_risk.risk_level == 'critical' %}
+                    <span style="color: #ef4444;">🔴 CRITICAL</span>
+                    {% elif product_risk.risk_level == 'high' %}
+                    <span style="color: #f59e0b;">🟠 HIGH</span>
+                    {% elif product_risk.risk_level == 'medium' %}
+                    <span style="color: #f59e0b;">🟡 MEDIUM</span>
+                    {% else %}
+                    <span style="color: #10b981;">🟢 LOW</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    </div>
+
+</div>
+
+<script>
+
+<!-- Expiry Timeline (Next 7 Days) -->
+{% if expiry_timeline %}
+<div class="card" style="margin-bottom: 30px;">
+    <h3>📅 Expiry Timeline - Next 7 Days</h3>
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px;">
+        {% for day in expiry_timeline %}
+        <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px; border: 2px solid {% if day.count > 5 %}#ef4444{% elif day.count > 2 %}#f59e0b{% else %}#10b981{% endif %};">
+            <div style="font-weight: 700; font-size: 24px; color: {% if day.count > 5 %}#ef4444{% elif day.count > 2 %}#f59e0b{% else %}#10b981{% endif %};">{{ day.count }}</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">{{ day.day }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Discount Suggestions -->
+{% if discount_suggestions %}
+<div class="card" style="margin-bottom: 30px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 5px solid #f59e0b;">
+    <h3>💡 Smart Discount Recommendations</h3>
+    <p style="margin-bottom: 15px; color: #92400e;">Apply discounts to boost sales and reduce waste!</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Time Left</th>
+                <th>Recommended Discount</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for suggestion in discount_suggestions %}
+            <tr>
+                <td><strong>{{ suggestion.product.name }}</strong></td>
+                <td><span style="color: #dc2626; font-weight: 600;">{{ suggestion.product.countdown_display }}</span></td>
+                <td><span style="font-size: 20px; font-weight: 700; color: #059669;">{{ suggestion.discount }}%</span></td>
+                <td>
+                    <form method="post" action="{% url 'apply_discount' suggestion.product.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="discount" value="{{ suggestion.discount }}">
+                        <button type="submit" class="btn btn-success" style="padding: 8px 16px; font-size: 13px;">Apply {{ suggestion.discount }}%</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Search and Filters -->
+<div class="card" style="margin-bottom: 20px;">
+    <h3>🔍 Search & Filter Products</h3>
+    <form method="get" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+        <input type="text" name="search" class="form-control" placeholder="Search by product name..." value="{{ search_query }}">
+        
+        <select name="status" class="form-control">
+            <option value="">All Status</option>
+            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+            <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+        </select>
+        
+        <select name="expiry" class="form-control">
+            <option value="">Expiry Filter</option>
+            <option value="24h" {% if expiry_filter == '24h' %}selected{% endif %}>Expiring in 24h</option>
+            <option value="48h" {% if expiry_filter == '48h' %}selected{% endif %}>Expiring in 48h</option>
+            <option value="low_stock" {% if expiry_filter == 'low_stock' %}selected{% endif %}>Low Stock (≤5)</option>
+        </select>
+        
+        <button type="submit" class="btn">Apply Filters</button>
+    </form>
+    
+    {% if status_filter or expiry_filter or search_query %}
+    <div style="margin-top: 15px;">
+        <a href="{% url 'seller_dashboard' %}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Clear Filters</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Bulk Actions -->
+<div class="card" style="margin-bottom: 20px; background: #f3f4f6;">
+    <h3>⚡ Bulk Actions</h3>
+    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <button onclick="selectAll()" class="btn btn-secondary" style="padding: 8px 16px;">Select All</button>
+        <button onclick="deselectAll()" class="btn btn-secondary" style="padding: 8px 16px;">Deselect All</button>
+        <button onclick="bulkDelete()" class="btn btn-danger" style="padding: 8px 16px;">🗑️ Delete Selected</button>
+        <button onclick="bulkDiscount()" class="btn btn-warning" style="padding: 8px 16px;">💰 Apply Discount to Selected</button>
+    </div>
+</div>
+
+<h2>Your Products ({{ products.count }})</h2>
+<div class="product-grid">
+    {% for product in products %}
+    <div class="product-card" style="position: relative;">
+        <!-- Bulk Selection Checkbox -->
+        <input type="checkbox" class="product-checkbox" data-product-id="{{ product.id }}" 
+               style="position: absolute; top: 15px; left: 15px; width: 20px; height: 20px; cursor: pointer; z-index: 10;">
+        
+        <!-- Discount Badge -->
+        {% if product.has_discount %}
+        <div style="position: absolute; top: 15px; right: 15px; background: #ef4444; color: white; padding: 8px 12px; border-radius: 20px; font-weight: 700; font-size: 13px; box-shadow: 0 2px 8px rgba(239,68,68,0.4);">
+            {{ product.get_final_discount }}% OFF
+        </div>
+        {% endif %}
+        
+        <div class="product-header">
+            <div class="product-name" style="margin-top: 10px;">{{ product.name }}</div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                {% if product.has_discount %}
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="text-decoration: line-through; color: #6b7280; font-size: 16px;">৳{{ product.price|floatformat:2 }}</div>
+                    <div class="product-price" style="color: #ef4444;">৳{{ product.get_discounted_price|floatformat:2 }}</div>
+                </div>
+                <div style="font-size: 12px; color: #059669; font-weight: 600;">Save ৳{{ product.get_savings|floatformat:2 }}</div>
+                {% else %}
+                <div class="product-price">৳{{ product.price|floatformat:2 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="product-info">
+            <div class="info-row">
+                <span class="label">Stock:</span>
+                <span class="value" style="{% if product.quantity <= 5 %}color: #ef4444; font-weight: 700;{% endif %}">
+                    {{ product.quantity }} units
+                </span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Expiry Time:</span>
+                <span class="value" style="font-weight: 700; {% if product.remaining_seconds <= 86400 %}color: #ef4444;{% elif product.remaining_seconds <= 172800 %}color: #f59e0b;{% else %}color: #10b981;{% endif %}">
+                    {{ product.countdown_display }}
+                </span>
+            </div>
+            
+            <span class="alert-badge alert-{{ product.alert_level }}">
+                {% if product.alert_level == 'expired' %}
+                EXPIRED
+                {% elif product.alert_level == 'last_chance' %}
+                Last Chance
+                {% elif product.alert_level == 'urgent' %}
+                Urgent Alert
+                {% elif product.alert_level == 'soon' %}
+                Expiring Soon
+                {% elif product.alert_level == 'warning' %}
+                Early Warning
+                {% else %}
+                Fresh
+                {% endif %}
+            </span>
+            
+            <div class="info-row" style="margin-top: 10px;">
+                <span class="label">Status:</span>
+                <span class="status-badge status-{{ product.status }}">
+                    {{ product.get_status_display }}
+                </span>
+            </div>
+            
+            <!-- Discount Recommendation -->
+            {% if product.recommended_discount > 0 and not product.has_discount %}
+            <div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                <div style="font-size: 12px; color: #92400e; font-weight: 600;">💡 Recommended:</div>
+                <div style="font-size: 14px; color: #78350f; font-weight: 700;">{{ product.recommended_discount }}% Discount</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Quick Edit Section -->
+        <div style="margin-top: 15px; padding: 15px; background: #f9fafb; border-radius: 10px; border: 2px dashed #d1d5db;">
+            <div style="font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 10px;">⚡ Quick Edit</div>
+            <form method="post" action="{% url 'quick_edit_product' product.id %}" style="display: grid; gap: 10px;">
+                {% csrf_token %}
+                
+                <!-- Price Input -->
+                <div>
+                    <label style="font-size: 12px; color: #6b7280; font-weight: 600; display: block; margin-bottom: 4px;">Price (৳)</label>
+                    <input type="number" name="price" value="{{ product.price }}" step="0.01" min="0" 
+                           style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; font-weight: 600;" required>
+                </div>
+                
+                <!-- Discount Input -->
+                <div>
+                    <label style="font-size: 12px; color: #6b7280; font-weight: 600; display: block; margin-bottom: 4px;">Manual Discount (%)</label>
+                    <input type="number" name="discount_percent" value="{{ product.discount_percent }}" min="0" max="90" 
+                           style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; font-weight: 600;" 
+                           placeholder="0-90%">
+                </div>
+                
+                <!-- Quantity Input -->
+                <div>
+                    <label style="font-size: 12px; color: #6b7280; font-weight: 600; display: block; margin-bottom: 4px;">Stock Quantity</label>
+                    <input type="number" name="quantity" value="{{ product.quantity }}" min="0" 
+                           style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 14px; font-weight: 600;" required>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
+                    <button type="submit" class="btn btn-success" style="padding: 10px; font-size: 13px; font-weight: 700;">
+                        💾 Save
+                    </button>
+                    <a href="{% url 'edit_product' product.id %}" class="btn btn-secondary" style="padding: 10px; font-size: 13px; text-align: center; line-height: 1.2;">
+                        ✎ Full Edit
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; background: white; padding: 40px; border-radius: 16px;">
+        <p style="font-size: 18px; color: #6b7280;">No products found. <a href="{% url 'add_product' %}" style="color: #667eea; font-weight: 600;">Add your first product</a></p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Bulk Actions JavaScript -->
+<script>
+function selectAll() {
+    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = true);
+}
+
+function deselectAll() {
+    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = false);
+}
+
+function getSelectedIds() {
+    const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.dataset.productId);
+}
+
+function bulkDelete() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) {
+        alert('Please select at least one product');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${ids.length} product(s)?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "bulk_delete_products" %}';
+        
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = '{{ csrf_token }}';
+        form.appendChild(csrf);
+        
+        ids.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'product_ids[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function bulkDiscount() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) {
+        alert('Please select at least one product');
+        return;
+    }
+    
+    const discount = prompt(`Enter discount percentage (0-100) for ${ids.length} product(s):`);
+    if (discount === null) return;
+    
+    const discountNum = parseInt(discount);
+    if (isNaN(discountNum) || discountNum < 0 || discountNum > 100) {
+        alert('Please enter a valid discount between 0 and 100');
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "bulk_apply_discount" %}';
+    
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrfmiddlewaretoken';
+    csrf.value = '{{ csrf_token }}';
+    form.appendChild(csrf);
+    
+    const discountInput = document.createElement('input');
+    discountInput.type = 'hidden';
+    discountInput.name = 'discount';
+    discountInput.value = discountNum;
+    form.appendChild(discountInput);
+    
+    ids.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'product_ids[]';
+        input.value = id;
+        form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}
